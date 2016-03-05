@@ -13,8 +13,8 @@ class Parser(object):
         print "\n\n\nYou texted:\n\n", text
 
         numbers = re.findall(r'\d+', text)
-        phrase = text.split(' ') 
-        currency = 'GBP'  
+        phrase = text.split(' ')
+        currency = 'GBP'
         acc_number = 0
         sort_code = 0
         amount = 0
@@ -32,13 +32,13 @@ class Parser(object):
         # finding the recepient's name in the phrase
         uppers = [x for x in phrase if x != phrase[0] and x[0].isupper()]
         if uppers: recepient = uppers[0]
-        
+
 
         if any(x in phrase for x in ['block', 'lost', 'stole', 'stolen']):
             action = 'block'
 
         # transfer 20 to
-        elif any(x in phrase for x in ['send', 'wire', 'transfer', 'owe']):   
+        elif any(x in phrase for x in ['send', 'wire', 'transfer', 'owe']):
             action = 'transfer'
             if 'to' in phrase:
                 next = phrase[phrase.index('to') + 1]
@@ -51,24 +51,25 @@ class Parser(object):
             action = 'add'
 
         else:
-            action = None    
+            action = None
 
         if not acc_number: acc_number = None
         if not sort_code: sort_code = None
 
         print json.dumps({"action": action,
-                            "amount" : amount, 
-                            "recepient" : {"name" : recepient, 
-                                            "sort code" : sort_code, 
-                                            "acc_number" : acc_number}, 
+                            "amount" : amount,
+                            "recepient" : {"name" : recepient,
+                                            "sort code" : sort_code,
+                                            "acc_number" : acc_number},
                             "currency" : currency})
-    
 
-msgs = [('send 20 to 23435465 812395'), ('send 150 to Bob'), ('I\'ve lost my card'),
-        ('My card has been stolen'), ('let\'s block my card'), 
+
+if __name__ == '__main__':
+    msgs = [('send 20 to 23435465 812395'), ('send 150 to Bob'), ('I\'ve lost my card'),
+        ('My card has been stolen'), ('let\'s block my card'),
         ('add Bob\'s details: bank_acc: 12345678, sort 123456'), ('I owe Bob 20 quid')]
 
-for x in msgs:
-    y = Parser(x)
-    y.parse_text(x)
+    for x in msgs:
+        y = Parser(x)
+        y.parse_text(x)
 
