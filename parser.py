@@ -4,78 +4,107 @@ import re
 
 
 class Parser(object):
+    """
+gets a text message and returns a json file (same format for everyone) with all relevant data fields
 
+
+separate methods: 
+    get number details
+
+
+    """
     def __init__(self, text):
         self.text = text
+        self.numbers = re.findall(r'\d+', text)
+        self.phrase = text.split(' ')
+        self.currency = 'GBP'
+        self.amount = 0
+        self.acc_number = None
+        self.sort_code = None
+        self.card_alias = None
+        self.card_number = None
+        self.action = None
+        self.user_alias = None
 
-    def parse_text(self, text):
-        # takes a string and returns returns functions with parameters
-        print "\n\n\nYou texted:\n\n", text
 
-        numbers = re.findall(r'\d+', text)
-        phrase = text.split(' ')
-        currency = 'GBP'
-        acc_number = 0
-        sort_code = 0
-        amount = 0
-        recepient = None
 
-        # automatically assigning digit strings to needed fields
-        for num in numbers:
+    def get_number_details(self):
+        for num in self.numbers:
             if len(num) == 6:
-                sort_code = int(num)
+                self.sort_code = int(num)
             elif len(num) == 8:
-                acc_number = int(num)
+                self.acc_number = int(num)
+            elif len(num) == 16:
+                self.card_number = int(num)
             else:
-                amount = int(num)
+                self.amount = int(num)
 
-        # finding the recepient's name in the phrase
-        uppers = [x for x in phrase if x != phrase[0] and x[0].isupper()]
-        if uppers: recepient = uppers[0]
-
-
-        if any(x in phrase for x in ['block', 'lost', 'stole', 'stolen']):
-            action = 'block'
-            result = re.findall(r'my \w+', phrase)
-            print result
-
-        # transfer 20 to
-        elif any(x in phrase for x in ['send', 'wire', 'transfer', 'owe']):
-            action = 'transfer'
-            if 'to' in phrase:
-                next = phrase[phrase.index('to') + 1]
+    def get_user_alias(self):
+        # finding user alias
+        if 'to' in self.phrase:
+                next = self.phrase[self.phrase.index('to') + 1]
                 if not next.isdigit():
-                    recepient = next
+                    self.user_alias = next
                 else:
-                    recepient = None
-
-        elif any(x in phrase for x in ['add', 'alias', 'alias']):
-            action = 'add'
+                    self.user_alias = None
 
         else:
-            action = None
+            # finding the recepient's name in the phrase
+            uppers = [x for x in self.phrase if x != self.phrase[0] and x[0].isupper()]
+            if uppers: self.user_alias = uppers[0]
 
-        if not acc_number: acc_number = None
-        if not sort_code: sort_code = None
+    def get_card_alias(self):
+        # finding card alias in phrase my____
+        result = re.findall(r'my\w+', self.text)
+        if result: 
+            self.card_alias = result[0]
 
-        dct = {"action": action,
-                "amount" : amount,
+
+    def choose_action(self): 
+        print "\n\n\nYou texted:\n\n", self.text
+
+        if any(x in self.phrase for x in ['block', 'lost', 'stole', 'stolen']):
+            self.action = 'block'
+            self.get_card_alias()
+
+        elif any(x in self.phrase for x in ['send', 'wire', 'transfer', 'owe']):
+            self.action = 'transfer'
+            self.get_user_alias()
+            self.get_number_details()
+
+        elif any(x in self.phrase for x in ['add', 'alias']):
+            self.action = 'add'
+            self.get_number_details()
+            self.get_user_alias()
+            self.get_card_alias()
+
+        else:
+            self.action = None
+
+    def parse_text(self):
+        self.choose_action()
+        dct = {"action": self.action,
+                "amount" : self.amount,
                 "recepient" : {
-                                "name" : recepient,
-                                "sort code" : sort_code,
-                                "acc_number" : acc_number
+                                "user_alias" : self.user_alias,
+                                "sort code" : self.sort_code,
+                                "acc_number" : self.acc_number
                                 },
-                "currency" : currency}
+                "card" : {
+                                "card_alias" : self.card_alias,
+                                "card_number" : self.card_number
+                                },    
+                "currency" : self.currency}
 
         print json.dumps(dct)
         return dct
 
 
 if __name__ == '__main__':
-    msgs = [('send 20 to 23435465 812395'), ('send 150 to Bob'), ('I\'ve lost Mymaestro'),
-        ('Mymaestro has been stolen'), ('let\'s block Mymaestro'),
-        ('add Bob\'s details: bank_acc: 12345678, sort 123456'), ('I owe Bob 20 quid'), ('add new card: mymaestro, 1234567890abcdef')]
+    msgs = [('send 20 to 23435465 812395'), ('send 150 to Bob'), ('I\'ve lost mymaestro'),
+        ('mymaestro has been stolen'), ('let\'s block mymaestro'),
+        ('add Bob\'s details: bank_acc: 12345678, sort 123456'), ('I owe Bob 20 quid'), ('add new card: mymaestro, 1234567890123456')]
 
     for x in msgs:
         y = Parser(x)
-        y.parse_text(x)
+        y.parse_text()
