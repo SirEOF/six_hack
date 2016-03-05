@@ -65,11 +65,10 @@ class Parser(object):
 
 
 if __name__ == '__main__':
-    msgs = [('send 20 to 23435465 812395'), ('send 150 to Bob'), ('I\'ve lost my card'),
-        ('My card has been stolen'), ('let\'s block my card'),
-        ('add Bob\'s details: bank_acc: 12345678, sort 123456'), ('I owe Bob 20 quid')]
+    msgs = [('send 20 to 23435465 812395'), ('send 150 to Bob'), ('I\'ve lost Mymaestro'),
+        ('Mymaestro has been stolen'), ('let\'s block Mymaestro'),
+        ('add Bob\'s details: bank_acc: 12345678, sort 123456'), ('I owe Bob 20 quid'), ('add new card: mymaestro, 1234567890abcdef')]
 
     for x in msgs:
         y = Parser(x)
         y.parse_text(x)
-
