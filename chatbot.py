@@ -31,7 +31,7 @@ It accepts the following commands from you, the owner, only:
 It can be a starting point for customer-support type of bots.
 """
 
-URL = 'https://761cad3e.ngrok.com'
+URL = 'https://bhwbgbcbyj.localtunnel.me/'
 
 USERS = {
     '@argparse': 98350863,
