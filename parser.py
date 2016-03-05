@@ -48,9 +48,10 @@ separate methods:
                     self.user_alias = None
 
         else:
-            # finding the recepient's name in the phrase
+            # finding the recepient's name in the phrase by capital letter
             uppers = [x for x in self.phrase if x != self.phrase[0] and x[0].isupper()]
             if uppers:
+                # make sure genetive Bob's/John's isn't included in the alias
                 if "'" in uppers[0]:
                     idx = uppers[0].find("'")
                     self.user_alias = uppers[0][:idx]
