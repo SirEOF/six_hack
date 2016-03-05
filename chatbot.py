@@ -56,30 +56,40 @@ class OwnerHandler(telepot.helper.ChatHandler):
     def __init__(self, seed_tuple, timeout, db):
         super(OwnerHandler, self).__init__(seed_tuple, timeout)
         self._db = db
-        self._prev_message = []
+        self._thread = {}
 
     def on_chat_message(self, msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
         print(msg)
-
-        if not self._prev_message:
-            self._prev_message.append(msg['text'])
-
         if content_type != 'text':
             self.sender.sendMessage("I don't understand")
             return
 
-        command = msg['text'].strip().lower()
+        parse = parser(msg['text'].strip().lower())
+
+        # in thread we store that we need to have for the conversation thread.
+
+        if self._thread:
+            action = self._thread['action']
+        else:
+            self._thread = {'action': parse['action'], 'json': parse}
+            action = self._thread['action']
+
 
         # Tells who has sent you how many messages
-        if command == '/help':
-            pass
+        # end of thread set self._thread to None
+        if action == 'transfer':
+            self.sender.sendMessage('')
         # read next sender's messages
-        elif command == '/start':
+        elif action == 'block':
+            pass
+        elif action == 'add':
             pass
 
         else:
-            self.sender.sendMessage("Say what?")
+            # garbled message send custom keyboard
+            # click one of the buttons, give example of what you can do
+            self.sender.sendMessage("?")
 
 
 import threading
