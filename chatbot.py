@@ -4,6 +4,7 @@ import telepot
 from telepot.delegate import per_chat_id, call, create_open
 import logging
 from parser import Parser
+import requests
 
 """
 $ python3.2 chatbox_nodb.py <token> <owner_id>
@@ -24,6 +25,8 @@ It accepts the following commands from you, the owner, only:
 
 It can be a starting point for customer-support type of bots.
 """
+
+URL = 'http://six-hack-bank.herokuapp.com'
 
 # Simulate a database to store unread messages
 class DBStore(object):
@@ -67,24 +70,31 @@ class OwnerHandler(telepot.helper.ChatHandler):
             return
 
         parser = Parser(msg['text'])
-        parse = parser.parse_text(msg['text'].strip().lower())
+        parsed = parser.parse_text(msg['text'].strip().lower())
 
         # in thread we store that we need to have for the conversation thread.
 
         if self._thread:
             action = self._thread['action']
         else:
-            self._thread = {'action': parse['action'], 'json': parse}
+            self._thread = {'action': parsed['action'], 'json': parsed}
             action = self._thread['action']
 
 
         # Tells who has sent you how many messages
         # end of thread set self._thread to None
         if action == 'transfer':
-            self.sender.sendMessage('')
+            self.sender.sendMessage('Got it')
         # read next sender's messages
         elif action == 'block':
-            pass
+
+            dct = {
+                'username': parsed['from']['username'],
+                'cardalias': parsed['alias'],
+                'action': 'lock'
+            }
+            # r = requests.post(URL, data=json.dumps(dct))
+            import pdb; pdb.set_trace()
         elif action == 'add':
             pass
         elif action == 'cancel':
