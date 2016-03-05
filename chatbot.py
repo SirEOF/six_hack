@@ -82,7 +82,6 @@ class OwnerHandler(telepot.helper.ChatHandler):
             self.sender.sendMessage("I don't understand")
             return
 
-
         parser = Parser(msg['text'])
         parsed = parser.parse_text()
         action = parsed['action']
