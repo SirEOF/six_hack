@@ -10,7 +10,8 @@ gets a text message and returns a json file (same format for everyone) with all 
 
 separate methods:
     get number details
-
+    get card alias
+    
 
     """
     def __init__(self, text):
@@ -108,15 +109,3 @@ separate methods:
 
         print json.dumps(dct)
         return dct
-
-
-if __name__ == '__main__':
-    msgs = ['send 20 to 23435465 812395', 'send 150 to @argparse', 'I\'ve lost mymaestro',
-        'mymaestro has been stolen', 'let\'s block mymaestro',
-        'add Bob\'s details: bank_acc: 12345678, sort 123456', 'I owe Bob 20 quid', 
-        'add new card: mymaestro, 1234567890123456', 'how have I been spending?', 
-        'How much have I spent recently?', 'what\'s my banking history?']
-
-    for x in msgs:
-        y = Parser(x)
-        y.parse_text()
