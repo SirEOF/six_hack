@@ -3,6 +3,7 @@ import sys
 import telepot
 from telepot.delegate import per_chat_id, call, create_open
 import logging
+from parser import Parser
 
 """
 $ python3.2 chatbox_nodb.py <token> <owner_id>
@@ -65,7 +66,8 @@ class OwnerHandler(telepot.helper.ChatHandler):
             self.sender.sendMessage("I don't understand")
             return
 
-        parse = parser(msg['text'].strip().lower())
+        parser = Parser(msg['text'])
+        parse = parser.parse_text(msg['text'].strip().lower())
 
         # in thread we store that we need to have for the conversation thread.
 
@@ -85,6 +87,8 @@ class OwnerHandler(telepot.helper.ChatHandler):
             pass
         elif action == 'add':
             pass
+        elif action == 'cancel':
+            self._thread = None
 
         else:
             # garbled message send custom keyboard
