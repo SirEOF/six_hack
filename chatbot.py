@@ -1,6 +1,8 @@
+import os
 import sys
 import telepot
-from telepot.delegate import per_chat_id_in, call, create_open
+from telepot.delegate import per_chat_id, call, create_open
+import logging
 
 """
 $ python3.2 chatbox_nodb.py <token> <owner_id>
@@ -23,13 +25,13 @@ It can be a starting point for customer-support type of bots.
 """
 
 # Simulate a database to store unread messages
-class UnreadStore(object):
+class DBStore(object):
     def __init__(self):
         self._db = {}
 
     def put(self, msg):
         chat_id = msg['chat']['id']
-        
+
         if chat_id not in self._db:
             self._db[chat_id] = []
 
@@ -39,7 +41,7 @@ class UnreadStore(object):
     def pull(self, chat_id):
         messages = self._db[chat_id]
         del self._db[chat_id]
-        
+
         # sort by date
         messages.sort(key=lambda m: m['date'])
         return messages
@@ -62,7 +64,7 @@ class OwnerHandler(telepot.helper.ChatHandler):
 
     def on_chat_message(self, msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
-        
+        print(msg)
         if content_type != 'text':
             self.sender.sendMessage("I don't understand")
             return
@@ -101,29 +103,6 @@ class OwnerHandler(telepot.helper.ChatHandler):
             self.sender.sendMessage("I don't understand")
 
 
-class MessageSaver(telepot.helper.Monitor):
-    def __init__(self, seed_tuple, store, exclude):
-        # The `capture` criteria means to capture all messages.
-        super(MessageSaver, self).__init__(seed_tuple, capture=[{'_': lambda msg: True}])
-        self._store = store
-        self._exclude = exclude
-
-    # Store every message, except those whose sender is in the exclude list, or non-text messages.
-    def on_chat_message(self, msg):
-        content_type, chat_type, chat_id = telepot.glance(msg)
-
-        if chat_id in self._exclude:
-            print('Chat id %d is excluded.' % chat_id)
-            return
-
-        if content_type != 'text':
-            print('Content type %s is ignored.' % content_type)
-            return
-
-        print('Storing message: %s' % msg)
-        self._store.put(msg)
-
-
 import threading
 
 class CustomThread(threading.Thread):
@@ -148,17 +127,13 @@ def custom_thread(func):
 
 
 class ChatBox(telepot.DelegatorBot):
-    def __init__(self, token, owner_id):
-        self._owner_id = owner_id
+    def __init__(self, token):
         self._seen = set()
-        self._store = UnreadStore()
+        self._store = DBStore()  # Imagine a dictionary for storing amounts.
 
         super(ChatBox, self).__init__(token, [
             # Here is a delegate to specially handle owner commands.
-            (per_chat_id_in([owner_id]), create_open(OwnerHandler, 20, self._store)),
-
-            # Seed is always the same, meaning only one MessageSaver is ever spawned for entire application.
-            (lambda msg: 1, create_open(MessageSaver, self._store, exclude=[owner_id])),
+            (per_chat_id(), create_open(OwnerHandler, 20, self._store)),
 
             # For senders never seen before, send him a welcome message.
             (self._is_newcomer, custom_thread(call(self._send_welcome))),
@@ -167,8 +142,6 @@ class ChatBox(telepot.DelegatorBot):
     # seed-calculating function: use returned value to indicate whether to spawn a delegate
     def _is_newcomer(self, msg):
         chat_id = msg['chat']['id']
-        if chat_id == self._owner_id:  # Sender is owner
-            return None  # No delegate spawned
 
         if chat_id in self._seen:  # Sender has been seen before
             return None  # No delegate spawned
@@ -183,8 +156,11 @@ class ChatBox(telepot.DelegatorBot):
         self.sendMessage(chat_id, 'Hello!')
 
 
-TOKEN = sys.argv[1]
-OWNER_ID = int(sys.argv[2])
+if __name__ == '__main__':
+    try:
+        TOKEN = os.environ['TELEGRAM_TOKEN']
+    except KeyError:
+        logging.info('No telegram token')
 
-bot = ChatBox(TOKEN, OWNER_ID)
-bot.notifyOnMessage(run_forever=True)
+    bot = ChatBox(TOKEN)
+    bot.notifyOnMessage(run_forever=True)
