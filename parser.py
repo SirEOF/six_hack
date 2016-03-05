@@ -81,6 +81,7 @@ separate methods:
             self.get_card_alias()
 
         else:
+            self.get_number_details()
             self.action = None
 
     def parse_text(self):
