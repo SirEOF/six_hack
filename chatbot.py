@@ -77,8 +77,8 @@ class OwnerHandler(telepot.helper.ChatHandler):
         content_type, chat_type, chat_id = telepot.glance(msg)
         print(msg)
         chat_id = msg['chat']['id']
-        if chat_id not in seen:
-            return
+        # if chat_id not in self._seen:
+        #    return
         if content_type != 'text':
             self.sender.sendMessage("I don't understand")
             return
@@ -101,29 +101,42 @@ class OwnerHandler(telepot.helper.ChatHandler):
             # r = requests.post(URL + '/card', data=json.dumps(dct))
         elif action == 'add':
             if parsed['to_add'] == 'person':
+                useralias = parsed['recepient']['user_alias']
                 data = {
                     'username': msg['from']['username'],
-                    'useralias': parsed['recepient']['user_alias'],
+                    'useralias': useralias,
                     'sortcode': parsed['recepient']['sort_code'],
                     'accountnumber': parsed['recepient']['acc_number']
                 }
                 r = requests.put(URL + '/alias', data=json.dumps(data))
+                if r.status_code == 200:
+                    self.sender.sendMessage(
+                        "We've succesfully added {} to your list of recepients".format(useralias)
+                    )
             elif parsed['to_add'] == 'card':
+                cardalias = parsed['card']['card_alias']
+                cardnumber = parsed['card']['card_number']
                 data = {
-                    'cardalias': parsed['card']['card_alias'],
-                    'cardnumber': parsed['card']['card_number'],
+                    'cardalias': cardalias,
+                    'cardnumber': cardnumber,
                     'username': msg['from']['username']
                 }
                 r = requests.put(URL + '/card', data=json.dumps(data))
+                if r.status_code == 200:
+                    self.sender.sendMessage(
+                        "Your card {} is now registered under alias: {}".format(cardnumber, cardalias)
+                    )
             else:
                 print('what?!')
 
-            # r = requests.post(URL '/card',  )
-
 
         elif action = 'statement':
+            username = msg['from']['username']    
+            r = requests.get(URL + '/balance/{}'.format(username))
+            if r.status_code == 200:
+                self.sender.sendMessage("You have {} pounds in your account".format(r.content))
 
-            #r = requests.post()
+
 
         elif action == 'cancel':
             self._thread = None
@@ -227,8 +240,8 @@ class ChatBox(telepot.DelegatorBot):
 
         super(ChatBox, self).__init__(token, [
             # Here is a delegate to specially handle owner commands.
-            # (per_chat_id(), create_open(OwnerHandler, 60*5, self._store, self._seen)),
-            (per_chat_id(), create_open(FirstTimeHandler, 60*5, self._store, self._seen))
+            (per_chat_id(), create_open(OwnerHandler, 60*5, self._store, self._seen)),
+            # (per_chat_id(), create_open(FirstTimeHandler, 60*5, self._store, self._seen))
             # For senders never seen before, send him a welcome message.
             # (self._is_newcomer, custom_thread(call(self._send_welcome))),
         ])
