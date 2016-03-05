@@ -33,6 +33,14 @@ It can be a starting point for customer-support type of bots.
 
 URL = 'http://14134b73.ngrok.io'
 
+USERS = {
+    '@argparse': 98350863,
+    '@druml': 201496951,
+    '@thsc5000': 12498168,
+    '@petr_tik': 157291539
+
+}
+
 def check_json_complete(parsed, action):
     # takes action and json as received originally and returns a list of fields to complete
     # if list - empty, proceed to the next stage
@@ -252,27 +260,29 @@ class TransferHandler(telepot.helper.ChatHandler):
         super(TransferHandler, self).__init__(seed_tuple, timeout)
         self._db = db
         self._seen = seen
-        self.recipient = '@bob'
+        self.recipient = None
         self.alias_id = 123123
-        self.password = None
-        self.confirmation = None
+        self.asked_password = None
+        self.asked_confirmation = None
+        self.current_thread = None
 
         # used by several, but not critical
         self.balance = None
         self.amount = None
+        self.password = None
 
     def cancel(self):
         self.recipient = None
         self.alias_id = None
-        self.password = None
-        self.confirmation = None
+        self.asked_password = None
+        self.asked_confirmation = None
+        self.current_thread = None
 
 
     def trigger_password_question(self, msg, parsed):
         # check balance for account.
-        self.balance = 100
-        self.amount = int(parsed['amount'])
-        if not self.password:
+        if not self.asked_password:
+            self.balance = 100
             if self.amount > self.balance:
                 self.sender.sendMessage('You can\'t send more than you have. Start over.')
                 self.cancel()
@@ -280,26 +290,28 @@ class TransferHandler(telepot.helper.ChatHandler):
             message = """
             You have {} in your account and I'll send {} to {}. Please put in your password now.
             """.format(self.balance, self.amount, self.recipient)
+            self.asked_password = True
             self.sender.sendMessage(message)
         else:
             m = re.search(r'\d+', msg['text'])
             self.password = m.group()
+            print(self.password) # not needed for this demo.
             self.trigger_confirmation(msg)
 
+
     def trigger_confirmation(self, msg):
-        if not self.confirmation:
+        if not self.asked_confirmation:
             message = """
                 Please confirm that you want to send {}""".format(self.amount)
+            self.sender.sendMessage(message, reply_markup={'keyboard': [['Yes','No']]})
+            self.asked_confirmation = True
         else:
-            refuse = ['nope', 'no', 'no thanks']
-            for noes in refuse:
-                if no in msg['text']:
-                    self.sender.sendMessage('All right, I won\'t send anything.')
-                    self.cancel()
-                    return
-            self.confirmation = True
-            self.trigger_send_money(msg)
-
+            # todo
+            if msg['text'] == 'No':
+                self.sender.sendMessage('All right, I won\'t send anything.')
+                self.cancel()
+            else:
+                self.trigger_send_money(msg)
 
     def trigger_send_money(self, msg):
         # request to update money
@@ -314,29 +326,41 @@ class TransferHandler(telepot.helper.ChatHandler):
     def on_chat_message(self, msg):
         # if chat_id not in self._seen:
         #     return
-
+        print(msg)
         parser = Parser(msg['text'])
         parsed = parser.parse_text()
 
         # have another id to transfer and send a message.
-        if parsed['action'] != 'transfer':
+        if self.current_thread:
+            print("current thread, {}".format(self.current_thread))
+        elif parsed['action'] != 'transfer':
+            print('action isnt transfer')
             return
-
-        self.recipient = parsed['recepient']['user_alias']
+        elif parsed['action'] == 'transfer':
+            print('action is transfer')
+            self.current_thread = True
+        if not self.recipient:
+            print('no recipient')
+            self.recipient = parsed['recepient']['user_alias']
+            self.amount = int(parsed['amount'])
         try:
             self.alias_id = self._db.fetch_alias(self.recipient)
         except KeyError:
-            # self.sender.sendMessage('Oh oh, looks like your friend hasn\'t registered yet. Send him a message and let him know that he should register right away.')
-            # return
-            pass
+            self.sender.sendMessage('Oh oh, looks like your friend hasn\'t registered yet. Send him a message and let him know that he should register right away.')
+            return
 
-        if self.confirmation:
-            self.trigger_send_money(msg)
-        elif self.password:
+        print(self.current_thread)
+        print(self.asked_password)
+
+        if self.asked_confirmation:
+            print('going to send money')
+            self.trigger_confirmation(msg)
+        elif self.asked_password:
+            print('going to ask confirmation')
             self.trigger_confirmation(msg)
         elif self.recipient and self.alias_id:
+            print('going to ask password')
             self.trigger_password_question(msg, parsed)
-
 
 class ChatBox(telepot.DelegatorBot):
     def __init__(self, token):
