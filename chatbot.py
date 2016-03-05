@@ -53,18 +53,18 @@ class DBStore(object):
 
 # Accept commands from owner. Give him unread messages.
 class OwnerHandler(telepot.helper.ChatHandler):
-    def __init__(self, seed_tuple, timeout, store):
+    def __init__(self, seed_tuple, timeout, db):
         super(OwnerHandler, self).__init__(seed_tuple, timeout)
-        self._store = store
-
-    def _read_messages(self, messages):
-        for msg in messages:
-            # assume all messages are text
-            self.sender.sendMessage(msg['text'])
+        self._db = db
+        self._prev_message = []
 
     def on_chat_message(self, msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
         print(msg)
+
+        if not self._prev_message:
+            self._prev_message.append(msg['text'])
+
         if content_type != 'text':
             self.sender.sendMessage("I don't understand")
             return
