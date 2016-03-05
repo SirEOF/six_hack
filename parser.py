@@ -18,6 +18,7 @@ separate methods:
         self.numbers = re.findall(r'\d+', text)
         self.phrase = text.split(' ')
         self.currency = 'GBP'
+        self.to_add = None # 'card' or 'person'
         self.amount = 0
         self.acc_number = None
         self.sort_code = None
@@ -80,6 +81,11 @@ separate methods:
             self.get_number_details()
             self.get_user_alias()
             self.get_card_alias()
+            if self.card_alias or self.card_number:
+                self.to_add = 'card'
+            elif self.user_alias or self.sort_code or self.acc_number:
+                self.to_add = 'person'
+                
 
         # statement action by words like 
         elif any(x in self.phrase for x in ['spent', 'spending', 'history', 'statement']):
@@ -92,6 +98,7 @@ separate methods:
     def parse_text(self):
         self.choose_action()
         dct = {"action": self.action,
+                "to_add" : self.to_add,
                 "amount" : self.amount,
                 "recepient" : {
                                 "user_alias": self.user_alias,
