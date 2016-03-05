@@ -49,7 +49,7 @@ separate methods:
         else:
             # finding the recepient's name in the phrase
             uppers = [x for x in self.phrase if x != self.phrase[0] and x[0].isupper()]
-            if uppers: 
+            if uppers:
                 if "'" in uppers[0]:
                     idx = uppers[0].find("'")
                     self.user_alias = uppers[0][:idx]
@@ -94,13 +94,13 @@ separate methods:
         dct = {"action": self.action,
                 "amount" : self.amount,
                 "recepient" : {
-                                "user_alias" : self.user_alias,
-                                "sort code" : self.sort_code,
-                                "acc_number" : self.acc_number
+                                "user_alias": self.user_alias,
+                                "sort_code": self.sort_code,
+                                "acc_number": self.acc_number
                                 },
                 "card" : {
-                                "card_alias" : self.card_alias,
-                                "card_number" : self.card_number
+                                "card_alias": self.card_alias,
+                                "card_number": self.card_number
                                 },
                 "currency" : self.currency}
 

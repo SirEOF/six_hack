@@ -1,10 +1,14 @@
+import json
+import logging
+import re
 import os
 import sys
-import telepot
-from telepot.delegate import per_chat_id, call, create_open
-import logging
-from parser import Parser
+
 import requests
+import telepot
+from telepot.delegate import per_chat_id, create_open
+
+from parser import Parser
 
 """
 $ python3.2 chatbox_nodb.py <token> <owner_id>
@@ -26,7 +30,7 @@ It accepts the following commands from you, the owner, only:
 It can be a starting point for customer-support type of bots.
 """
 
-URL = 'http://six-hack-bank.herokuapp.com'
+URL = 'http://14134b73.ngrok.io'
 
 
 def check_json_complete(parsed, action):
@@ -59,20 +63,7 @@ class DBStore(object):
 
     def put(self, msg, key, value):
         chat_id = msg['chat']['id']
-        self.db.setdefault(chat_id, {})[key] = value
-
-    # Pull all unread messages of a `chat_id`
-    def pull(self, chat_id):
-        messages = self._db[chat_id]
-        del self._db[chat_id]
-
-        # sort by date
-        messages.sort(key=lambda m: m['date'])
-        return messages
-
-    # Tells how many unread messages per chat_id
-    def unread_per_chat(self):
-        return [(k,len(v)) for k,v in self._db.items()]
+        self._db.setdefault(chat_id, {})[key] = value
 
 
 # Accept commands from owner. Give him unread messages.
@@ -162,29 +153,60 @@ class FirstTimeHandler(telepot.helper.ChatHandler):
         self._db = db
         self._seen = seen
         self._presented = False
+        self.presented = False
+        self.asked_secret = False
+        self.asked_account = False
+
+    def trigger_accountnumber(self, msg):
+        if not self.asked_account:
+            self.sender.sendMessage('What is your account number and sort code?')
+            self.asked_account = True
+        else:
+            parser = Parser(msg['text'])
+            parsed = parser.parse_text()
+            self._db.put(msg, 'accountnumber', parsed['recepient']['acc_number'])
+            self._db.put(msg, 'sortcode', parsed['recepient']['sort_code'])
+            self.trigger_secretnumber(msg)
+
+    def trigger_secretnumber(self, msg):
+        if not self.asked_secret:
+            self.sender.sendMessage('What is your secret bank code?')
+            self.asked_secret = True
+        else:
+            m = re.search(r'\d+', msg['text'])
+            if not m:
+                self.asked_secret = False
+
+            self._db.put(msg, 'secretnumber', m.group())
+            self.sender.sendMessage('Thanks, I\'ll connect to the bank!')
+            self.connect_to_bank(msg)
+
+    def connect_to_bank(self, msg):
+        data = {
+            'username': msg['from']['username'],
+            'accountnumber': self._db.get(msg, 'accountnumber'),
+            'secretnumber': self._db.get(msg, 'secretnumber'),
+            'sortcode': self._db.get(msg, 'sortcode')
+
+        }
+        r = requests.post(URL + '/start', data=json.dumps(data))
+        print(r)
+
 
     def on_chat_message(self, msg):
         chat_id = msg['chat']['id']
-        if not self._presented:
+        if not self.presented:
             self.sender.sendMessage('Welcome to Bankbot! ')
             self.sender.sendMessage('I need a few details first')
-            self._presented = True
-            self.asked_account = False
-
+            self.presented = True
 
         if chat_id in self._seen:
             return None
         else:
-            if not self._db.get('accountnumber'):
-                if not self.asked_account:
-                    self.sender.sendMessage('What is your account number and sort code?')
-                    self.asked_account = True
-                else:
-                    parser = Parser(msg['text'])
-                    parsed = parser.parse_text()
-                    print(parsed)
-
-
+            if not self._db.get(msg, 'accountnumber'):
+                self.trigger_accountnumber(msg)
+            elif not self._db.get(msg, 'secretnumber'):
+                self.trigger_secretnumber(msg)
 
 
 class ChatBox(telepot.DelegatorBot):
