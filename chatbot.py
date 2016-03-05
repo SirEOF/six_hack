@@ -191,7 +191,9 @@ class FirstTimeHandler(telepot.helper.ChatHandler):
         }
         r = requests.post(URL + '/start', data=json.dumps(data))
         print(r)
-
+        self.sender.sendMessage('Now you can transfer money to your friends!')
+        chat_id = msg['chat']['id']
+        self._seen.add(chat_id)
 
     def on_chat_message(self, msg):
         chat_id = msg['chat']['id']
