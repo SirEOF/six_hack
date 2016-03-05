@@ -26,8 +26,6 @@ separate methods:
         self.action = None
         self.user_alias = None
 
-
-
     def get_number_details(self):
         for num in self.numbers:
             if len(num) == 6:
@@ -65,20 +63,27 @@ separate methods:
     def choose_action(self):
         print "\n\n\nYou texted:\n\n", self.text
 
+        # block card
         if any(x in self.phrase for x in ['block', 'lost', 'stole', 'stolen']):
             self.action = 'block'
             self.get_card_alias()
 
+        # transfer money
         elif any(x in self.phrase for x in ['send', 'wire', 'transfer', 'owe']):
             self.action = 'transfer'
             self.get_user_alias()
             self.get_number_details()
 
+        # adding new cards or friend's details
         elif any(x in self.phrase for x in ['add', 'alias']):
             self.action = 'add'
             self.get_number_details()
             self.get_user_alias()
             self.get_card_alias()
+
+        # statement action by words like 
+        elif any(x in self.phrase for x in ['spent', 'spending', 'history', 'statement']):
+            self.action = 'statement'
 
         else:
             self.get_number_details()
@@ -104,9 +109,11 @@ separate methods:
 
 
 if __name__ == '__main__':
-    msgs = [('send 20 to 23435465 812395'), ('send 150 to Bob'), ('I\'ve lost mymaestro'),
-        ('mymaestro has been stolen'), ('let\'s block mymaestro'),
-        ('add Bob\'s details: bank_acc: 12345678, sort 123456'), ('I owe Bob 20 quid'), ('add new card: mymaestro, 1234567890123456')]
+    msgs = ['send 20 to 23435465 812395', 'send 150 to Bob', 'I\'ve lost mymaestro',
+        'mymaestro has been stolen', 'let\'s block mymaestro',
+        'add Bob\'s details: bank_acc: 12345678, sort 123456', 'I owe Bob 20 quid', 
+        'add new card: mymaestro, 1234567890123456', 'how have I been spending?', 
+        'How much have I spent recently?', 'what\'s my banking history?']
 
     for x in msgs:
         y = Parser(x)
