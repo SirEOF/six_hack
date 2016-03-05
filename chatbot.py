@@ -40,13 +40,12 @@ def check_json_complete(parsed, action):
     if action == 'block':
         # have to have either
         if not parsed['card']['card_alias'] or not parsed['card']['card_number']:
+            pass
 
     elif action == 'transfer':
-
+        pass
     elif action == 'add':
-
-
-
+        pass
     else:
         pass
 
@@ -130,13 +129,11 @@ class OwnerHandler(telepot.helper.ChatHandler):
                 print('what?!')
 
 
-        elif action = 'statement':
+        elif action == 'statement':
             username = msg['from']['username']    
             r = requests.get(URL + '/balance/{}'.format(username))
             if r.status_code == 200:
-                self.sender.sendMessage("You have {} pounds in your account".format(r.content))
-
-
+                self.sender.sendMessage("You have {} pounds in your account".format(r.json()['balance']))
 
         elif action == 'cancel':
             self._thread = None
