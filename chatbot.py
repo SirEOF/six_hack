@@ -33,16 +33,14 @@ class DBStore(object):
     def __init__(self):
         self._db = {}
 
-    def get(self, key):
-        return self._db.get(key)
-
-    def put(self, msg):
+    def get(self, msg, key):
         chat_id = msg['chat']['id']
+        result = self._db.setdefault(chat_id, {}).get(key)
+        return result
 
-        if chat_id not in self._db:
-            self._db[chat_id] = []
-
-        self._db[chat_id].append(msg)
+    def put(self, msg, key, value):
+        chat_id = msg['chat']['id']
+        self.db.setdefault(chat_id, {})[key] = value
 
     # Pull all unread messages of a `chat_id`
     def pull(self, chat_id):
