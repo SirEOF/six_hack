@@ -72,35 +72,14 @@ class OwnerHandler(telepot.helper.ChatHandler):
         command = msg['text'].strip().lower()
 
         # Tells who has sent you how many messages
-        if command == '/unread':
-            results = self._store.unread_per_chat()
-
-            lines = []
-            for r in results:
-                n = 'ID: %d\n%d unread' % r
-                lines.append(n)
-
-            if not len(lines):
-                self.sender.sendMessage('No unread messages')
-            else:
-                self.sender.sendMessage('\n'.join(lines))
-
+        if command == '/help':
+            pass
         # read next sender's messages
-        elif command == '/next':
-            results = self._store.unread_per_chat()
-
-            if not len(results):
-                self.sender.sendMessage('No unread messages')
-                return
-
-            chat_id = results[0][0]
-            unread_messages = self._store.pull(chat_id)
-
-            self.sender.sendMessage('From ID: %d' % chat_id)
-            self._read_messages(unread_messages)
+        elif command == '/start':
+            pass
 
         else:
-            self.sender.sendMessage("I don't understand")
+            self.sender.sendMessage("Say what?")
 
 
 import threading
