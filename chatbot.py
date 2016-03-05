@@ -33,16 +33,14 @@ class DBStore(object):
     def __init__(self):
         self._db = {}
 
-    def get(self, key):
-        return self._db.get(key)
-
-    def put(self, msg):
+    def get(self, msg, key):
         chat_id = msg['chat']['id']
+        result = self._db.setdefault(chat_id, {}).get(key)
+        return result
 
-        if chat_id not in self._db:
-            self._db[chat_id] = []
-
-        self._db[chat_id].append(msg)
+    def put(self, msg, key, value):
+        chat_id = msg['chat']['id']
+        self.db.setdefault(chat_id, {})[key] = value
 
     # Pull all unread messages of a `chat_id`
     def pull(self, chat_id):
@@ -74,7 +72,7 @@ class OwnerHandler(telepot.helper.ChatHandler):
             return
 
         parser = Parser(msg['text'])
-        parsed = parser.parse_text(msg['text'].strip().lower())
+        parsed = parser.parse_text()
 
         # in thread we store that we need to have for the conversation thread.
 
@@ -142,14 +140,25 @@ class FirstTimeHandler(telepot.helper.ChatHandler):
     def on_chat_message(self, msg):
         chat_id = msg['chat']['id']
         if not self._presented:
-            self.sender.sendMessage('Thanks for using us.')
-            self.sender.sendMessage('test')
+            self.sender.sendMessage('Welcome to Bankbot! ')
+            self.sender.sendMessage('I need a few details first')
+            self._presented = True
+            self.asked_account = False
+
 
         if chat_id in self._seen:
             return None
         else:
             if not self._db.get('accountnumber'):
-                pass
+                if not self.asked_account:
+                    self.sender.sendMessage('What is your account number and sort code?')
+                    self.asked_account = True
+                else:
+                    parser = Parser(msg['text'])
+                    parsed = parser.parse_text()
+                    print(parsed)
+
+
 
 
 class ChatBox(telepot.DelegatorBot):
@@ -159,8 +168,8 @@ class ChatBox(telepot.DelegatorBot):
 
         super(ChatBox, self).__init__(token, [
             # Here is a delegate to specially handle owner commands.
-            (per_chat_id(), create_open(OwnerHandler, 20, self._store)),
-            (per_chat_id(), create_open(FirstTimeHandler, 20, self._store, self._seen))
+            # (per_chat_id(), create_open(OwnerHandler, 60*5, self._store)),
+            (per_chat_id(), create_open(FirstTimeHandler, 60*5, self._store, self._seen))
             # For senders never seen before, send him a welcome message.
             # (self._is_newcomer, custom_thread(call(self._send_welcome))),
         ])
