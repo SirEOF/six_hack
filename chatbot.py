@@ -36,15 +36,15 @@ URL = 'http://14134b73.ngrok.io'
 def check_json_complete(parsed, action):
     # takes action and json as received originally and returns a list of fields to complete
     # if list - empty, proceed to the next stage
-    
+
     if action == 'block':
-        # have to have either 
+        # have to have either
         if not parsed['card']['card_alias'] or not parsed['card']['card_number']:
-            
+
     elif action == 'transfer':
-        
+
     elif action == 'add':
-        
+
 
 
     else:
@@ -68,33 +68,26 @@ class DBStore(object):
 
 # Accept commands from owner. Give him unread messages.
 class OwnerHandler(telepot.helper.ChatHandler):
-    def __init__(self, seed_tuple, timeout, db):
+    def __init__(self, seed_tuple, timeout, db, seen):
         super(OwnerHandler, self).__init__(seed_tuple, timeout)
         self._db = db
-        self._thread = {}
-        self_seen = set()
+        self._seen = seen
 
     def on_chat_message(self, msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
         print(msg)
+        chat_id = msg['chat']['id']
+        if chat_id not in seen:
+            return
         if content_type != 'text':
             self.sender.sendMessage("I don't understand")
             return
 
+
         parser = Parser(msg['text'])
         parsed = parser.parse_text()
+        action = parsed['action']
 
-        # in thread we store that we need to have for the conversation thread.
-
-        if self._thread:
-            action = self._thread['action']
-        else:
-            self._thread = {'action': parsed['action'], 'json': parsed}
-            action = self._thread['action']
-
-
-        # Tells who has sent you how many messages
-        # end of thread set self._thread to None
         if action == 'transfer':
             self.sender.sendMessage('Got it')
         # read next sender's messages
@@ -102,17 +95,34 @@ class OwnerHandler(telepot.helper.ChatHandler):
 
             dct = {
                 'username': msg['from']['username'],
-                'card_alias': parsed['card_alias'],
+                'cardalias': parsed['card_alias'],
                 'action': 'lock'
             }
             # r = requests.post(URL + '/card', data=json.dumps(dct))
         elif action == 'add':
-            pass
+            if parsed['to_add'] == 'person':
+                data = {
+                    'username': msg['from']['username'],
+                    'useralias': parsed['recepient']['user_alias'],
+                    'sortcode': parsed['recepient']['sort_code'],
+                    'accountnumber': parsed['recepient']['acc_number']
+                }
+                r = requests.put(URL + '/alias', data=json.dumps(data))
+            elif parsed['to_add'] == 'card':
+                data = {
+                    'cardalias': parsed['card']['card_alias'],
+                    'cardnumber': parsed['card']['card_number'],
+                    'username': msg['from']['username']
+                }
+                r = requests.put(URL + '/card', data=json.dumps(data))
+            else:
+                print('what?!')
+
             # r = requests.post(URL '/card',  )
 
 
         elif action = 'statement':
-            
+
             #r = requests.post()
 
         elif action == 'cancel':
@@ -152,7 +162,6 @@ class FirstTimeHandler(telepot.helper.ChatHandler):
         super(FirstTimeHandler, self).__init__(seed_tuple, timeout)
         self._db = db
         self._seen = seen
-        self._presented = False
         self.presented = False
         self.asked_secret = False
         self.asked_account = False
@@ -218,7 +227,7 @@ class ChatBox(telepot.DelegatorBot):
 
         super(ChatBox, self).__init__(token, [
             # Here is a delegate to specially handle owner commands.
-            # (per_chat_id(), create_open(OwnerHandler, 60*5, self._store)),
+            # (per_chat_id(), create_open(OwnerHandler, 60*5, self._store, self._seen)),
             (per_chat_id(), create_open(FirstTimeHandler, 60*5, self._store, self._seen))
             # For senders never seen before, send him a welcome message.
             # (self._is_newcomer, custom_thread(call(self._send_welcome))),
