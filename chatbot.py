@@ -41,7 +41,6 @@ def check_json_complete(parsed, action):
         # have to have either
         if not parsed['card']['card_alias'] or not parsed['card']['card_number']:
             pass
-
     elif action == 'transfer':
         pass
     elif action == 'add':
@@ -64,6 +63,17 @@ class DBStore(object):
         chat_id = msg['chat']['id']
         self._db.setdefault(chat_id, {})[key] = value
 
+    def insert_alias(self, msg):
+        chat_id = msg['chat']['id']
+        username = msg['from']['username']
+        self._db.setdefault('usernames', {})[username] = chat_id
+
+    def fetch_alias(self, username):
+        alias_id = self._db['usernames'].get(username)
+        if not alias_id:
+            raise KeyError('Alias not found')
+        return alias_id
+
 
 # Accept commands from owner. Give him unread messages.
 class OwnerHandler(telepot.helper.ChatHandler):
@@ -76,8 +86,10 @@ class OwnerHandler(telepot.helper.ChatHandler):
         content_type, chat_type, chat_id = telepot.glance(msg)
         print(msg)
         chat_id = msg['chat']['id']
-        # if chat_id not in self._seen:
-        #    return
+
+        if chat_id not in self._seen:
+            return
+
         if content_type != 'text':
             self.sender.sendMessage("I don't understand")
             return
@@ -97,7 +109,6 @@ class OwnerHandler(telepot.helper.ChatHandler):
                 'action': 'block'
             }
             r = requests.post(URL + '/card', data=json.dumps(dct))
-        
 
         elif action == 'add':
             if parsed['to_add'] == 'person':
@@ -129,9 +140,8 @@ class OwnerHandler(telepot.helper.ChatHandler):
             else:
                 print('what do you want to add: card or friend?')
 
-
         elif action == 'statement':
-            username = msg['from']['username']    
+            username = msg['from']['username']
             r = requests.get(URL + '/balance/{}'.format(username))
             if r.status_code == 200:
                 self.sender.sendMessage("You have {} pounds in your account".format(r.json()['balance']))
@@ -143,7 +153,7 @@ class OwnerHandler(telepot.helper.ChatHandler):
             self.sender.sendMessage(random.choice(JOKES))
 
         elif action == 'naughty':
-            self.sender.sendMessage("Let's keep this professional, Sir")            
+            self.sender.sendMessage("Let's keep this professional, Sir")
 
         else:
             # garbled message send custom keyboard
@@ -213,12 +223,12 @@ class FirstTimeHandler(telepot.helper.ChatHandler):
             'accountnumber': self._db.get(msg, 'accountnumber'),
             'secretnumber': self._db.get(msg, 'secretnumber'),
             'sortcode': self._db.get(msg, 'sortcode')
-
         }
         r = requests.post(URL + '/start', data=json.dumps(data))
         print(r)
         self.sender.sendMessage('Now you can transfer money to your friends!')
         chat_id = msg['chat']['id']
+        self._db.insert_alias(msg)
         self._seen.add(chat_id)
 
     def on_chat_message(self, msg):
@@ -230,11 +240,102 @@ class FirstTimeHandler(telepot.helper.ChatHandler):
 
         if chat_id in self._seen:
             return None
+
+        if not self._db.get(msg, 'accountnumber'):
+            self.trigger_accountnumber(msg)
+        elif not self._db.get(msg, 'secretnumber'):
+            self.trigger_secretnumber(msg)
+
+class TransferHandler(telepot.helper.ChatHandler):
+
+    def __init__(self, seed_tuple, timeout, db, seen):
+        super(TransferHandler, self).__init__(seed_tuple, timeout)
+        self._db = db
+        self._seen = seen
+        self.recipient = '@bob'
+        self.alias_id = 123123
+        self.password = None
+        self.confirmation = None
+
+        # used by several, but not critical
+        self.balance = None
+        self.amount = None
+
+    def cancel(self):
+        self.recipient = None
+        self.alias_id = None
+        self.password = None
+        self.confirmation = None
+
+
+    def trigger_password_question(self, msg, parsed):
+        # check balance for account.
+        self.balance = 100
+        self.amount = int(parsed['amount'])
+        if not self.password:
+            if self.amount > self.balance:
+                self.sender.sendMessage('You can\'t send more than you have. Start over.')
+                self.cancel()
+                return
+            message = """
+            You have {} in your account and I'll send {} to {}. Please put in your password now.
+            """.format(self.balance, self.amount, self.recipient)
+            self.sender.sendMessage(message)
         else:
-            if not self._db.get(msg, 'accountnumber'):
-                self.trigger_accountnumber(msg)
-            elif not self._db.get(msg, 'secretnumber'):
-                self.trigger_secretnumber(msg)
+            m = re.search(r'\d+', msg['text'])
+            self.password = m.group()
+            self.trigger_confirmation(msg)
+
+    def trigger_confirmation(self, msg):
+        if not self.confirmation:
+            message = """
+                Please confirm that you want to send {}""".format(self.amount)
+        else:
+            refuse = ['nope', 'no', 'no thanks']
+            for noes in refuse:
+                if no in msg['text']:
+                    self.sender.sendMessage('All right, I won\'t send anything.')
+                    self.cancel()
+                    return
+            self.confirmation = True
+            self.trigger_send_money(msg)
+
+
+    def trigger_send_money(self, msg):
+        # request to update money
+
+        message = 'I sent the money to {}'.format(self.recipient)
+        user = msg['from']['username']
+        self.sender.sendMessage(message)
+
+        m2 = 'Hey {}, sent you {}. Go on, send him a thank you message.'.format(user, self.amount)
+        self.sendMessage(self.alias_id, m2)
+
+    def on_chat_message(self, msg):
+        # if chat_id not in self._seen:
+        #     return
+
+        parser = Parser(msg['text'])
+        parsed = parser.parse_text()
+
+        # have another id to transfer and send a message.
+        if parsed['action'] != 'transfer':
+            return
+
+        self.recipient = parsed['recepient']['user_alias']
+        try:
+            self.alias_id = self._db.fetch_alias(self.recipient)
+        except KeyError:
+            # self.sender.sendMessage('Oh oh, looks like your friend hasn\'t registered yet. Send him a message and let him know that he should register right away.')
+            # return
+            pass
+
+        if self.confirmation:
+            self.trigger_send_money(msg)
+        elif self.password:
+            self.trigger_confirmation(msg)
+        elif self.recipient and self.alias_id:
+            self.trigger_password_question(msg, parsed)
 
 
 class ChatBox(telepot.DelegatorBot):
@@ -244,7 +345,8 @@ class ChatBox(telepot.DelegatorBot):
 
         super(ChatBox, self).__init__(token, [
             # Here is a delegate to specially handle owner commands.
-            (per_chat_id(), create_open(OwnerHandler, 60*5, self._store, self._seen)),
+            (per_chat_id(), create_open(TransferHandler, 60*5, self._store, self._seen)),
+            # (per_chat_id(), create_open(OwnerHandler, 60*5, self._store, self._seen)),
             # (per_chat_id(), create_open(FirstTimeHandler, 60*5, self._store, self._seen))
             # For senders never seen before, send him a welcome message.
             # (self._is_newcomer, custom_thread(call(self._send_welcome))),
