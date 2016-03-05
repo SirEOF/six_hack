@@ -51,7 +51,10 @@ separate methods:
         else:
             # finding the recepient's name in the phrase
             uppers = [x for x in self.phrase if x != self.phrase[0] and x[0].isupper()]
-            if uppers: self.user_alias = uppers[0]
+            if uppers: 
+                if "'" in uppers[0]:
+                    idx = uppers[0].find("'")
+                    self.user_alias = uppers[0][:idx]
 
     def get_card_alias(self):
         # finding card alias in phrase my____
