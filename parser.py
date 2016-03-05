@@ -40,21 +40,9 @@ separate methods:
 
     def get_user_alias(self):
         # finding user alias
-        if 'to' in self.phrase:
-                next = self.phrase[self.phrase.index('to') + 1]
-                if not next.isdigit():
-                    self.user_alias = next
-                else:
-                    self.user_alias = None
-
-        else:
-            # finding the recepient's name in the phrase by capital letter
-            uppers = [x for x in self.phrase if x != self.phrase[0] and x[0].isupper()]
-            if uppers:
-                # make sure genetive Bob's/John's isn't included in the alias
-                if "'" in uppers[0]:
-                    idx = uppers[0].find("'")
-                    self.user_alias = uppers[0][:idx]
+        alias_match = re.search('@(\w+)', self.text)
+        if alias_match:
+            self.user_alias = alias_match.group(1)
 
     def get_card_alias(self):
         # finding card alias in phrase my____
@@ -117,7 +105,7 @@ separate methods:
 
 
 if __name__ == '__main__':
-    msgs = ['send 20 to 23435465 812395', 'send 150 to Bob', 'I\'ve lost mymaestro',
+    msgs = ['send 20 to 23435465 812395', 'send 150 to @argparse', 'I\'ve lost mymaestro',
         'mymaestro has been stolen', 'let\'s block mymaestro',
         'add Bob\'s details: bank_acc: 12345678, sort 123456', 'I owe Bob 20 quid', 
         'add new card: mymaestro, 1234567890123456', 'how have I been spending?', 
