@@ -31,14 +31,13 @@ It accepts the following commands from you, the owner, only:
 It can be a starting point for customer-support type of bots.
 """
 
-URL = 'http://14134b73.ngrok.io'
+URL = 'https://761cad3e.ngrok.com'
 
 USERS = {
     '@argparse': 98350863,
     '@druml': 201496951,
     '@thsc5000': 12498168,
     '@petr_tik': 157291539
-
 }
 
 def check_json_complete(parsed, action):
@@ -77,7 +76,7 @@ class DBStore(object):
         self._db.setdefault('usernames', {})[username] = chat_id
 
     def fetch_alias(self, username):
-        alias_id = self._db['usernames'].get(username)
+        alias_id = USERS.get(username)
         if not alias_id:
             raise KeyError('Alias not found')
         return alias_id
@@ -107,15 +106,19 @@ class OwnerHandler(telepot.helper.ChatHandler):
         action = parsed['action']
 
         if action == 'transfer':
-            self.sender.sendMessage('Got it')
+            self.sender.sendMessage("Let's transfer some ca$h money")
+
         # read next sender's messages
         elif action == 'block':
+            cardalias = parsed['card']['card_alias']
             dct = {
                 'username': msg['from']['username'],
-                'cardalias': parsed['card']['card_alias'],
+                'cardalias': cardalias,
                 'action': 'block'
             }
             r = requests.post(URL + '/card', data=json.dumps(dct))
+            if r.status_code == 200:
+                self.sender.sendMessage("Your card {} has been blocked. \nShall we order a new one?".format(cardalias))
 
         elif action == 'add':
             if parsed['to_add'] == 'person':
@@ -149,10 +152,14 @@ class OwnerHandler(telepot.helper.ChatHandler):
 
         elif action == 'statement':
             username = msg['from']['username']
+            places = ['Starbucks', 'Waitrose', 'Tesco', 'Aldi']
             r = requests.get(URL + '/balance/{}'.format(username))
             if r.status_code == 200:
-                self.sender.sendMessage("You have {} pounds in your account".format(r.json()['balance']))
-
+                self.sender.sendMessage("""You have {} pounds in your account.""".format(r.json()['balance'])),
+                for _ in xrange(5):
+                    num = float("{0:.2f}""".format(random.uniform(1.00, 30.00)))
+                    self.sender.sendMessage("{}\t |\t {} |\t {}".format(num, 'outgoing', random.choice(places)))
+        
         elif action == 'cancel':
             self._thread = None
 
@@ -260,11 +267,10 @@ class TransferHandler(telepot.helper.ChatHandler):
         self._db = db
         self._seen = seen
         self.recipient = None
-        self.alias_id = 123123
+        self.alias_id = None
         self.asked_password = None
         self.asked_confirmation = None
         self.current_thread = None
-
         # used by several, but not critical
         self.balance = None
         self.amount = None
@@ -277,11 +283,12 @@ class TransferHandler(telepot.helper.ChatHandler):
         self.asked_confirmation = None
         self.current_thread = None
 
-
     def trigger_password_question(self, msg, parsed):
-        # check balance for account.
         if not self.asked_password:
-            self.balance = 100
+            username = msg['from']['username']
+            r = requests.get(URL + '/balance/{}'.format(username))
+            if r.status_code == 200:
+                self.balance = format(r.json()['balance'])
             if self.amount > self.balance:
                 self.sender.sendMessage('You can\'t send more than you have. Start over.')
                 self.cancel()
@@ -314,13 +321,19 @@ class TransferHandler(telepot.helper.ChatHandler):
 
     def trigger_send_money(self, msg):
         # request to update money
-
-        message = 'I sent the money to {}'.format(self.recipient)
-        user = msg['from']['username']
-        self.sender.sendMessage(message)
-
-        m2 = 'Hey {}, sent you {}. Go on, send him a thank you message.'.format(user, self.amount)
-        self.sendMessage(self.alias_id, m2)
+        username = msg['from']['username']
+        dct = {
+        'from': username,
+        'to': self.recipient,
+        'amount': self.amount
+        }
+        r = requests.post(URL + '/transfer', data=json.dumps(dct))
+        if r.status_code == 200:
+            message = 'I sent the money to {}'.format(self.recipient)
+            self.sender.sendMessage(message)
+            m2 = 'Hey {}, {} sent you {}. Go on, send him a thank you message.'.format(self.recipient, username, self.amount)
+            self.bot.sendMessage(USERS[self.recipient], m2)
+            self.cancel()
 
     def on_chat_message(self, msg):
         # if chat_id not in self._seen:
@@ -369,8 +382,8 @@ class ChatBox(telepot.DelegatorBot):
         super(ChatBox, self).__init__(token, [
             # Here is a delegate to specially handle owner commands.
             (per_chat_id(), create_open(TransferHandler, 60*5, self._store, self._seen)),
-            # (per_chat_id(), create_open(OwnerHandler, 60*5, self._store, self._seen)),
-            # (per_chat_id(), create_open(FirstTimeHandler, 60*5, self._store, self._seen))
+            (per_chat_id(), create_open(OwnerHandler, 60*5, self._store, self._seen)),
+            (per_chat_id(), create_open(FirstTimeHandler, 60*5, self._store, self._seen))
             # For senders never seen before, send him a welcome message.
             # (self._is_newcomer, custom_thread(call(self._send_welcome))),
         ])
