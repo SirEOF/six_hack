@@ -36,6 +36,8 @@ class Parser(object):
 
         if any(x in phrase for x in ['block', 'lost', 'stole', 'stolen']):
             action = 'block'
+            result = re.findall(r'my \w+', phrase)
+            print result
 
         # transfer 20 to
         elif any(x in phrase for x in ['send', 'wire', 'transfer', 'owe']):
@@ -56,12 +58,17 @@ class Parser(object):
         if not acc_number: acc_number = None
         if not sort_code: sort_code = None
 
-        print json.dumps({"action": action,
-                            "amount" : amount,
-                            "recepient" : {"name" : recepient,
-                                            "sort code" : sort_code,
-                                            "acc_number" : acc_number},
-                            "currency" : currency})
+        dct = {"action": action,
+                "amount" : amount,
+                "recepient" : {
+                                "name" : recepient,
+                                "sort code" : sort_code,
+                                "acc_number" : acc_number
+                                },
+                "currency" : currency}
+
+        print json.dumps(dct)
+        return dct
 
 
 if __name__ == '__main__':
