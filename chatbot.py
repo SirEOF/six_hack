@@ -33,6 +33,9 @@ class DBStore(object):
     def __init__(self):
         self._db = {}
 
+    def get(self, key):
+        return self._db.get(key)
+
     def put(self, msg):
         chat_id = msg['chat']['id']
 
@@ -61,6 +64,7 @@ class OwnerHandler(telepot.helper.ChatHandler):
         super(OwnerHandler, self).__init__(seed_tuple, timeout)
         self._db = db
         self._thread = {}
+        self_seen = set()
 
     def on_chat_message(self, msg):
         content_type, chat_type, chat_id = telepot.glance(msg)
@@ -89,12 +93,11 @@ class OwnerHandler(telepot.helper.ChatHandler):
         elif action == 'block':
 
             dct = {
-                'username': parsed['from']['username'],
-                'cardalias': parsed['alias'],
+                'username': msg['from']['username'],
+                'cardalias': parsed['cardalias'],
                 'action': 'lock'
             }
-            # r = requests.post(URL, data=json.dumps(dct))
-            import pdb; pdb.set_trace()
+            # r = requests.post(URL + '/card', data=json.dumps(dct))
         elif action == 'add':
             pass
         elif action == 'cancel':
@@ -128,6 +131,26 @@ def custom_thread(func):
         return t
     return f
 
+class FirstTimeHandler(telepot.helper.ChatHandler):
+
+    def __init__(self, seed_tuple, timeout, db, seen):
+        super(FirstTimeHandler, self).__init__(seed_tuple, timeout)
+        self._db = db
+        self._seen = seen
+        self._presented = False
+
+    def on_chat_message(self, msg):
+        chat_id = msg['chat']['id']
+        if not self._presented:
+            self.sender.sendMessage('Thanks for using us.')
+            self.sender.sendMessage('test')
+
+        if chat_id in self._seen:
+            return None
+        else:
+            if not self._db.get('accountnumber'):
+                pass
+
 
 class ChatBox(telepot.DelegatorBot):
     def __init__(self, token):
@@ -137,9 +160,9 @@ class ChatBox(telepot.DelegatorBot):
         super(ChatBox, self).__init__(token, [
             # Here is a delegate to specially handle owner commands.
             (per_chat_id(), create_open(OwnerHandler, 20, self._store)),
-
+            (per_chat_id(), create_open(FirstTimeHandler, 20, self._store, self._seen))
             # For senders never seen before, send him a welcome message.
-            (self._is_newcomer, custom_thread(call(self._send_welcome))),
+            # (self._is_newcomer, custom_thread(call(self._send_welcome))),
         ])
 
     # seed-calculating function: use returned value to indicate whether to spawn a delegate
@@ -151,12 +174,6 @@ class ChatBox(telepot.DelegatorBot):
 
         self._seen.add(chat_id)
         return []  # non-hashable ==> delegates are independent, no seed association is made.
-
-    def _send_welcome(self, seed_tuple):
-        chat_id = seed_tuple[1]['chat']['id']
-
-        print('Sending welcome ...')
-        self.sendMessage(chat_id, 'Hello!')
 
 
 if __name__ == '__main__':

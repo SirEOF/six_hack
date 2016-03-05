@@ -8,7 +8,7 @@ class Parser(object):
 gets a text message and returns a json file (same format for everyone) with all relevant data fields
 
 
-separate methods: 
+separate methods:
     get number details
 
 
@@ -56,11 +56,10 @@ separate methods:
     def get_card_alias(self):
         # finding card alias in phrase my____
         result = re.findall(r'my\w+', self.text)
-        if result: 
+        if result:
             self.card_alias = result[0]
 
-
-    def choose_action(self): 
+    def choose_action(self):
         print "\n\n\nYou texted:\n\n", self.text
 
         if any(x in self.phrase for x in ['block', 'lost', 'stole', 'stolen']):
@@ -93,7 +92,7 @@ separate methods:
                 "card" : {
                                 "card_alias" : self.card_alias,
                                 "card_number" : self.card_number
-                                },    
+                                },
                 "currency" : self.currency}
 
         print json.dumps(dct)
