@@ -28,6 +28,25 @@ It can be a starting point for customer-support type of bots.
 
 URL = 'http://six-hack-bank.herokuapp.com'
 
+
+def check_json_complete(parsed, action):
+    # takes action and json as received originally and returns a list of fields to complete
+    # if list - empty, proceed to the next stage
+    
+    if action == 'block':
+        # have to have either 
+        if not parsed['card']['card_alias'] or not parsed['card']['card_number']:
+            
+    elif action == 'transfer':
+        
+    elif action == 'add':
+        
+
+
+    else:
+        pass
+
+
 # Simulate a database to store unread messages
 class DBStore(object):
     def __init__(self):
@@ -92,12 +111,19 @@ class OwnerHandler(telepot.helper.ChatHandler):
 
             dct = {
                 'username': msg['from']['username'],
-                'cardalias': parsed['cardalias'],
+                'card_alias': parsed['card_alias'],
                 'action': 'lock'
             }
             # r = requests.post(URL + '/card', data=json.dumps(dct))
         elif action == 'add':
             pass
+            # r = requests.post(URL '/card',  )
+
+
+        elif action = 'statement':
+            
+            #r = requests.post()
+
         elif action == 'cancel':
             self._thread = None
 
