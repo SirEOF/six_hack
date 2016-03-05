@@ -3,13 +3,14 @@ import logging
 import re
 import os
 import sys
+import random
 
 import requests
 import telepot
 from telepot.delegate import per_chat_id, create_open
 
 from parser import Parser
-
+from jokes import JOKES
 """
 $ python3.2 chatbox_nodb.py <token> <owner_id>
 
@@ -31,7 +32,6 @@ It can be a starting point for customer-support type of bots.
 """
 
 URL = 'http://14134b73.ngrok.io'
-
 
 def check_json_complete(parsed, action):
     # takes action and json as received originally and returns a list of fields to complete
@@ -91,13 +91,14 @@ class OwnerHandler(telepot.helper.ChatHandler):
             self.sender.sendMessage('Got it')
         # read next sender's messages
         elif action == 'block':
-
             dct = {
                 'username': msg['from']['username'],
-                'cardalias': parsed['card_alias'],
-                'action': 'lock'
+                'cardalias': parsed['card']['card_alias'],
+                'action': 'block'
             }
-            # r = requests.post(URL + '/card', data=json.dumps(dct))
+            r = requests.post(URL + '/card', data=json.dumps(dct))
+        
+
         elif action == 'add':
             if parsed['to_add'] == 'person':
                 useralias = parsed['recepient']['user_alias']
@@ -126,7 +127,7 @@ class OwnerHandler(telepot.helper.ChatHandler):
                         "Your card {} is now registered under alias: {}".format(cardnumber, cardalias)
                     )
             else:
-                print('what?!')
+                print('what do you want to add: card or friend?')
 
 
         elif action == 'statement':
@@ -138,10 +139,16 @@ class OwnerHandler(telepot.helper.ChatHandler):
         elif action == 'cancel':
             self._thread = None
 
+        elif action == 'joke':
+            self.sender.sendMessage(random.choice(JOKES))
+
+        elif action == 'naughty':
+            self.sender.sendMessage("Let's keep this professional, Sir")            
+
         else:
             # garbled message send custom keyboard
             # click one of the buttons, give example of what you can do
-            self.sender.sendMessage("?")
+            self.sender.sendMessage("What do you want me to do now?")
 
 
 import threading

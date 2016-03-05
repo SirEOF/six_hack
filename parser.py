@@ -42,7 +42,7 @@ separate methods:
         # finding user alias
         alias_match = re.search('@(\w+)', self.text)
         if alias_match:
-            self.user_alias = alias_match.group(1)
+            self.user_alias = alias_match.group(0)
 
     def get_card_alias(self):
         # finding card alias in phrase my____
@@ -76,8 +76,14 @@ separate methods:
                 self.to_add = 'person'
                 
 
+        elif any(x in self.phrase for x in ['wearing', 'naked']):
+            self.action = 'naughty'
+
+        elif any(x in self.phrase for x in ['joke', 'banter']):
+            self.action = 'joke'
+
         # statement action by words like 
-        elif any(x in self.phrase for x in ['spent', 'spending', 'history', 'statement']):
+        elif any(x in self.phrase for x in ['spent', 'spending', 'history', 'statement', 'balance']):
             self.action = 'statement'
 
         else:
