@@ -11,6 +11,8 @@ from telepot.delegate import per_chat_id, create_open
 
 from parser import Parser
 from jokes import JOKES
+from plotter import generate_report
+
 """
 $ python3.2 chatbox_nodb.py <token> <owner_id>
 
@@ -39,22 +41,6 @@ USERS = {
     '@thsc5000': 12498168,
     '@petr_tik': 157291539
 }
-
-def check_json_complete(parsed, action):
-    # takes action and json as received originally and returns a list of fields to complete
-    # if list - empty, proceed to the next stage
-
-    if action == 'block':
-        # have to have either
-        if not parsed['card']['card_alias'] or not parsed['card']['card_number']:
-            pass
-    elif action == 'transfer':
-        pass
-    elif action == 'add':
-        pass
-    else:
-        pass
-
 
 # Simulate a database to store unread messages
 class DBStore(object):
@@ -150,15 +136,22 @@ class OwnerHandler(telepot.helper.ChatHandler):
             else:
                 print('what do you want to add: card or friend?')
 
-        elif action == 'statement':
+        elif action == 'balance':
             username = msg['from']['username']
-            places = ['Starbucks', 'Waitrose', 'Tesco', 'Aldi']
             r = requests.get(URL + '/balance/{}'.format(username))
             if r.status_code == 200:
-                self.sender.sendMessage("""You have {} pounds in your account.""".format(r.json()['balance'])),
-                for _ in xrange(5):
-                    num = float("{0:.2f}""".format(random.uniform(1.00, 30.00)))
-                    self.sender.sendMessage("{}\t |\t {} |\t {}".format(num, 'outgoing', random.choice(places)))
+                self.sender.sendMessage("""Current balance: {} pounds.""".format(r.json()['balance']))
+            
+        elif action == 'statement':
+            username = msg['from']['username']
+            userid = USERS['@'+username]
+            r = requests.get(URL + '/balance/{}'.format(username))
+            if r.status_code == 200:
+                self.sender.sendMessage("""You have {} pounds in your account.""".format(r.json()['balance']))
+                figname, to_watch = generate_report()
+                with open('{}.png'.format(figname), 'rb') as f:
+                    self.bot.sendPhoto(userid, f)
+                self.sender.sendMessage("You should watch your spending on {}".format(to_watch))
         
         elif action == 'cancel':
             self._thread = None
@@ -172,8 +165,8 @@ class OwnerHandler(telepot.helper.ChatHandler):
         else:
             # garbled message send custom keyboard
             # click one of the buttons, give example of what you can do
-            self.sender.sendMessage("What do you want me to do now?")
-
+            # self._thread = None
+            pass
 
 import threading
 
@@ -293,9 +286,10 @@ class TransferHandler(telepot.helper.ChatHandler):
                 self.sender.sendMessage('You can\'t send more than you have. Start over.')
                 self.cancel()
                 return
+            randoms = random.sample(range(1,7), 3)
             message = """
-            You have {} in your account and I'll send {} to {}. Please put in your password now.
-            """.format(self.balance, self.amount, self.recipient)
+            You have {} in your account and I'll send {} to {}.\nPlease type digits {}, {} and {} of your password to confirm.
+            """.format(self.balance, self.amount, self.recipient, randoms[0], randoms[1], randoms[2])
             self.asked_password = True
             self.sender.sendMessage(message)
         else:

@@ -11,7 +11,7 @@ gets a text message and returns a json file (same format for everyone) with all 
 separate methods:
     get number details
     get card alias
-    
+
 
     """
     def __init__(self, text):
@@ -84,7 +84,10 @@ separate methods:
             self.action = 'joke'
 
         # statement action by words like 
-        elif any(x in self.phrase for x in ['spent', 'spending', 'history', 'statement', 'balance']):
+        elif any(x in self.phrase for x in ['balance']):
+            self.action = 'balance'
+
+        elif any(x in self.phrase for x in ['spent', 'spending', 'history', 'statement']):
             self.action = 'statement'
 
         else:
