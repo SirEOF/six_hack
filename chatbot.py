@@ -31,7 +31,7 @@ It accepts the following commands from you, the owner, only:
 It can be a starting point for customer-support type of bots.
 """
 
-URL = 'https://bhwbgbcbyj.localtunnel.me/'
+URL = 'https://761cad3e.ngrok.com'
 
 USERS = {
     '@argparse': 98350863,
@@ -240,7 +240,7 @@ class FirstTimeHandler(telepot.helper.ChatHandler):
         }
         r = requests.post(URL + '/start', data=json.dumps(data))
         print(r)
-        self.sender.sendMessage('Now you can transfer money to your friends!')
+        self.sender.sendMessage('We are connected! Now you can transfer money to your friends!')
         chat_id = msg['chat']['id']
         self._db.insert_alias(msg)
         self._seen.add(chat_id)
