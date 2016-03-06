@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import random
+import time
 
 import requests
 import telepot
@@ -105,6 +106,11 @@ class OwnerHandler(telepot.helper.ChatHandler):
             r = requests.post(URL + '/card', data=json.dumps(dct))
             if r.status_code == 200:
                 self.sender.sendMessage("Your card {} has been blocked. \nShall we order a new one?".format(cardalias))
+
+                time.sleep(5)
+                self.sender.sendMessage("New card sent to your address.")
+
+
 
         elif action == 'add':
             if parsed['to_add'] == 'person':
