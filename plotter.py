@@ -35,5 +35,5 @@ max_per = max(percents)
 to_watch = labels[percents.index(max_per)]
 
 print fig_name, (max_per, to_watch)
-
+return "you should watch your spending on {}".format(to_watch)
 #return fig_name, (max_per, to_watch)
