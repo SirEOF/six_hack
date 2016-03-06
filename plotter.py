@@ -29,11 +29,13 @@ fig.gca().add_artist(centre_circle)
 # Set aspect ratio to be equal so that pie is drawn as a circle.
 plt.axis('equal')
 fig_name = 'foo{}'.format(random.randint(1,1000000000000))
-#fig.savefig(fig_name, dpi=300)
 
 max_per = max(percents)
 to_watch = labels[percents.index(max_per)]
 
+
+#### uncomment out when needed
+# fig.savefig(fig_name, dpi=300)
 print fig_name, (max_per, to_watch)
-return "you should watch your spending on {}".format(to_watch)
-#return fig_name, (max_per, to_watch)
+# return "you should watch your spending on {}".format(to_watch)
+# return fig_name, (max_per, to_watch)
