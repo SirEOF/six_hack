@@ -19,11 +19,11 @@ Talk to your bank in human language through this [Telegram](https://telegram.org
 
 - Add your card with your own custom alias of the form my* and card number 
 
-    Telegram_user, [06.03.16 11:09]
-    Add myvisa/mymaestro/myworkcard 1234567890123456
-    
-    Sixhack_bank_bot, [06.03.16 11:09]
-    Your card myvisa/mymaestro/myworkcard has been added. 
+        Telegram_user, [06.03.16 11:09]
+        Add myvisa/mymaestro/myworkcard 1234567890123456
+        
+        Sixhack_bank_bot, [06.03.16 11:09]
+        Your card myvisa/mymaestro/myworkcard has been added. 
     
 - Send it a short quick message in natual language to your bot and your current card is blocked and new one will be sent
 
