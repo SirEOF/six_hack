@@ -93,10 +93,7 @@ quick message
     You currently have 4725.0 pounds in your account and here is the breakdown of your recent purchases by category
     
     Sixhack_bank_bot, [06.03.16 11:09]
-    ![Photo](https://raw.githubusercontent.com/petr-tik/six_hack/master/spending_example.jpg)
-    [![gif with examples](https://github.com/petr-tik/six_hack/blob/master/output.gif)](https://github.com/petr-tik/six_hack/blob/master/output.gif)
-
-    
+![Photo](https://raw.githubusercontent.com/petr-tik/six_hack/master/spending_example.jpg)
     
     Sixhack_bank_bot, [06.03.16 11:09]
     You should watch your spending on entertainment
