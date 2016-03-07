@@ -100,6 +100,8 @@ Talk to your bank in human language through this [Telegram](https://telegram.org
 - ask your bot what your spending has been like
 - get a response and a recommendation, which category to watch
 
+
+
     Telegram_user, [06.03.16 11:08]
     What have I been spending on? 
     
