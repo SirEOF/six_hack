@@ -101,9 +101,6 @@ Talk to your bank in human language through this [Telegram](https://telegram.org
 - get a response and a recommendation, which category to watch
 
 
-
-
-
     Telegram_user, [06.03.16 11:08]
     What have I been spending on? 
     
