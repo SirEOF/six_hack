@@ -2,6 +2,7 @@
 
 Talk to your bank in human language through this [Telegram](https://telegram.org/) bot. You can tell it to send money, block your card and get a review of your spending habits. 
 
+[![gif with examples](https://github.com/petr-tik/six_hack/blob/master/output.gif)](https://github.com/petr-tik/six_hack/blob/master/output.gif)
 
 # Problems TeleBank solves:
 
