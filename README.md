@@ -12,21 +12,21 @@ Card loss
     Now
 You've lost your card or someone stole it. Need to look up the emergency number, call it, give your details, which is tedious, costly and stops you from getting a new card. 
 
-    With TeleBank
+With TeleBank
 quick message in natual language to your bot and your current card is blocked and new one will be sent
 
-Petr Tikilyaynen, [06.03.16 11:09]
-I've lost myvisa
-
-Sixhack_bank_bot, [06.03.16 11:09]
-Your card myvisa has been blocked. 
-Shall we order a new one?
-
-Petr Tikilyaynen, [06.03.16 11:09]
-yes
-
-Sixhack_bank_bot, [06.03.16 11:19]
-New card is on the way
+    Petr Tikilyaynen, [06.03.16 11:09]
+    I've lost myvisa
+    
+    Sixhack_bank_bot, [06.03.16 11:09]
+    Your card myvisa has been blocked. 
+    Shall we order a new one?
+    
+    Petr Tikilyaynen, [06.03.16 11:09]
+    yes
+    
+    Sixhack_bank_bot, [06.03.16 11:19]
+    New card is on the way
 
 
 
