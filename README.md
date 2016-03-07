@@ -9,10 +9,23 @@ Talk to your bank in human language through this [Telegram](https://telegram.org
 ## Card loss
 
 ### Traditional banks
-You've lost your card or someone stole it. Need to look up the emergency number, call it, give your details, which is tedious, costly and stops you from getting a new card. 
+- You've lost your card or someone stole it. 
+- Need to look up the emergency number
+- Call it, give your details
+- Wait for them to confirm
+- Call again to get a new card
 
-### With TeleBankBot
-quick message in natual language to your bot and your current card is blocked and new one will be sent
+### TeleBankBot
+
+- Add your card with your own custom alias of the form my* and card number 
+
+    Telegram_user, [06.03.16 11:09]
+    Add myvisa/mymaestro/myworkcard 1234567890123456
+    
+    Sixhack_bank_bot, [06.03.16 11:09]
+    Your card myvisa/mymaestro/myworkcard has been added. 
+    
+- Send it a short quick message in natual language to your bot and your current card is blocked and new one will be sent
 
     Telegram_user, [06.03.16 11:09]
     I've lost myvisa
@@ -28,16 +41,15 @@ quick message in natual language to your bot and your current card is blocked an
     New card is on the way
 
 
-
 ## Money Tranfer:
 
 ### Traditional banks
-log into online banking, find the person in the contacts book, choose amount, send. 
+- log into online banking, find the person in the contacts book, choose amount, send. 
 
 ### TeleBankBot
-ping a message with recipient's alias - money and notification is sent automatically
 
-Create an alias for a person given their bank details 
+- Create an alias for a person given their bank details 
+- The alias will be saved in your bank's payment recipients
 
     Telegram_user, [06.03.16 12:27]
     add @friends_name (sort code) 123456 (acc_number) 12345678
@@ -45,7 +57,7 @@ Create an alias for a person given their bank details
     Sixhack_bank_bot, [06.03.16 12:27]
     We've succesfully added @friends_name to your list of recepients
 
-Drop it a normal message and reference your friend by name
+- Drop it a normal message and reference your friend by alias
 
     Telegram_user, [06.03.16 12:28]
     I owe @friends_name 150 quid
@@ -69,20 +81,24 @@ Drop it a normal message and reference your friend by name
     Sixhack_bank_bot, [06.03.16 12:28]
     I just sent the money to @friends_name
 
-@friends_name receives a confirmation message (if their telegram name is their alias)
+- @friends_name receives a confirmation message (if their telegram name is their alias)
 
     Sixhack_bank_bot, [06.03.16 12:28]
-    Hey @friends_name, @Telegram_user sent you 150 pounds. Check your bank account and send him a thank you message.
+    Hey @friends_name, @Telegram_user sent you 150 pounds. 
+    Check your bank account and send your friend @Telegram_user a thank you message.
 
 
 ## Spending: 
 
 ### Traditional banks
-wait for a paper letter to come through the door or 
-log into your online bank to download a csv, which you need to parse in Excel
+- wait for a paper letter to come through the door or 
+- log into your online bank to download a csv, which you need to parse in Excel
 
 
 ### TeleBankBot
+
+- ask your bot what your spending has been like
+- get a response and a recommendation, which category to watch
 
     Telegram_user, [06.03.16 11:08]
     What have I been spending on? 
