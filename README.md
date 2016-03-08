@@ -1,4 +1,4 @@
-# Pitch
+# Hackathon pitch
 
 Talk to your bank in human language through this [Telegram](https://telegram.org/) bot. You can tell it to send money, block your card and get a review of your spending habits. 
 
