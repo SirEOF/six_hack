@@ -37,7 +37,7 @@ Talk to your bank in human language through this [Telegram](https://telegram.org
         Telegram_user, [06.03.16 11:09]
         yes
             
-        Sixhack_bank_bot, [06.03.16 11:19]
+        Sixhack_bank_bot, [06.03.16 11:09]
         New card is on the way
 
 
